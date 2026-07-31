@@ -1,71 +1,79 @@
-# Caesar Cipher Tool
+# 🔐 Caesar Cipher Pro
 
-## Project Description
+A professional Python implementation of the **Caesar Cipher** encryption algorithm with an interactive command-line interface, file encryption support, learning mode, history logging, and automated testing.
 
-This is a Python-based Caesar Cipher application that can encrypt and decrypt messages using the Caesar Cipher algorithm. The project is built with a modular structure and demonstrates Python fundamentals such as functions, loops, conditionals, string manipulation, exception handling, and user input.
+---
 
-## Features
+## 📖 Project Description
 
-- Encrypt messages
-- Decrypt messages
-- Supports uppercase letters
-- Supports lowercase letters
-- Preserves numbers and special characters
-- Menu-driven interface
-- Input validation using try-except
-- Modular project structure
+Caesar Cipher Pro is a Python application that demonstrates the Caesar Cipher encryption technique. It is designed not only to encrypt and decrypt messages but also to help beginners understand how the algorithm works through a dedicated **Learning Mode**.
 
-## Project Structure
+The project follows a modular structure and includes file handling, exception handling, automated testing, and Git version control.
 
-CAESAR-CIPHER-PRO/
+---
+
+## ✨ Features
+
+- 🔒 Encrypt messages
+- 🔓 Decrypt messages
+- 📂 Encrypt text from a file
+- 📂 Decrypt text from a file
+- 📄 Automatically generates `encrypted_message.txt`
+- 📝 Saves operation history to `history.txt`
+- 🎓 Learning Mode with step-by-step encryption
+- 🎓 Learning Mode with step-by-step decryption
+- ✅ Input validation
+- 🔤 Supports uppercase and lowercase letters
+- 🔢 Preserves numbers, spaces, and symbols
+- 🧪 Automated testing using Pytest
+- 📁 Modular project structure
+
+---
+
+## 📂 Project Structure
+
+```text
+Caesar-Cipher-Pro/
 │
+├── src/
+│   ├── __init__.py
+│   └── cipher.py
+│
+├── tests/
+│   ├── __init__.py
+│   └── test_cipher.py
+│
+├── sample_message.txt
+├── history.txt
 ├── main.py
 ├── requirements.txt
-├── README.md
-├── LICENSE
 ├── .gitignore
-├── src/
-│   └── cipher.py
-├── tests/
-├── docs/
-├── assets/
-└── screenshots/
+└── README.md
+```
 
-### Folder and File Description
+---
 
-- **main.py** - Main entry point of the application. Displays the menu and handles user interaction.
-- **src/cipher.py** - Contains the Caesar Cipher encryption and decryption functions.
-- **README.md** - Project documentation and usage instructions.
-- **requirements.txt** - Lists the project dependencies (this project uses only the Python Standard Library).
-- **LICENSE** - Specifies the license for the project.
-- **.gitignore** - Tells Git which files and folders to ignore.
-- **tests/** - Stores test files for the project.
-- **docs/** - Contains additional project documentation.
-- **assets/** - Stores project assets such as icons or other resources.
-- **screenshots/** - Contains screenshots of the application for the README.
+## ⚙️ Installation
 
-
-## Installation
-
-1. Clone the repository:
+Clone the repository:
 
 ```bash
 git clone <repository-url>
 ```
 
-2. Navigate to the project folder:
+Move into the project folder:
 
 ```bash
-cd CAESAR-CIPHER-PRO
+cd Caesar-Cipher-Pro
 ```
 
-3. (Optional) Create a virtual environment:
+Create a virtual environment:
 
 ```bash
 python -m venv .venv
 ```
 
-4. Activate the virtual environment.
+Activate it.
 
 **Windows**
 
@@ -73,81 +81,87 @@ python -m venv .venv
 .venv\Scripts\activate
 ```
 
-**Linux/macOS**
-
-```bash
-source .venv/bin/activate
-```
-
-5. Install the required dependencies:
+Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## How to Run
+---
 
-Run the following command:
+## ▶️ How to Run
 
 ```bash
 python main.py
 ```
 
+---
 
-## Sample Output
+## 🧪 Running Tests
 
-### Main Menu
+Run all tests using Pytest:
 
-![Main Menu](screenshots/menu.png)
+```bash
+python -m pytest
+```
+
+Expected output:
+
+```text
+9 passed
+```
 
 ---
 
-### Encryption
+## 📚 Learning Mode
 
-![Encryption](screenshots/encrypt.png)
+The project includes a dedicated learning mode that displays Caesar Cipher operations step by step.
+
+Example:
+
+```
+h ---> k
+e ---> h
+l ---> o
+l ---> o
+o ---> r
+```
+
+This feature helps beginners understand how each character is transformed.
 
 ---
 
-### Decryption
-
-![Decryption](screenshots/decrypt.png)
-
----
-
-### Invalid Input Handling
-
-![Invalid Input](screenshots/invalid_input.png)
-
-
-
-## Technologies Used
+## 🛠 Technologies Used
 
 - Python 3
-- Visual Studio Code
+- Pytest
 - Git
 - GitHub
+- VS Code
 
+---
 
-## Future Improvements
+## 🚀 Future Improvements
 
-- Add a graphical user interface (GUI).
-- Support file encryption and decryption.
-- Save encryption history.
-- Add multiple cipher algorithms.
-- Improve input validation and user experience.
+- Desktop GUI using Tkinter
+- Flask Web Application
+- Password-protected encryption
+- Multiple cipher algorithms
+- Save history in JSON format
+- Export history as PDF
+- Dark mode GUI
+---
 
+## 👩‍💻 Author
 
-## Author
+**Dhanu Sri**
 
-**Name:** Dhanu Sri
+B.Tech CSM Student
 
-**Course:** B.Tech (Computer Science and Machine Learning)
+Python Developer | AI & Machine Learning Aspirant
 
-**Project:** Caesar Cipher Tool
+---
 
-**GitHub:** *(Add your GitHub profile link after creating your repository.)*
+## 📄 License
 
-
-## License
-
-This project is licensed under the MIT License. See the `LICENSE` file for more information.
+This project is developed for educational purposes.
