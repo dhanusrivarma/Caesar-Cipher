@@ -7,3 +7,5 @@ __pycache__/
 
 # History file
 history.txt
+
+encrypted_message.txt
