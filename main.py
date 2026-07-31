@@ -1,5 +1,18 @@
 from src.cipher import encrypt, decrypt
 
+
+def save_to_file(operation, original, result, shift):
+    """Save encryption/decryption history to history.txt"""
+
+    with open("history.txt", "a") as file:
+        file.write("=" * 40 + "\n")
+        file.write(f"Operation : {operation}\n")
+        file.write(f"Original  : {original}\n")
+        file.write(f"Shift     : {shift}\n")
+        file.write(f"Result    : {result}\n")
+        file.write("=" * 40 + "\n\n")
+
+
 while True:
     print("\n" + "=" * 40)
     print("      CAESAR CIPHER TOOL")
@@ -21,6 +34,9 @@ while True:
             continue
 
         encrypted_text = encrypt(message, shift)
+
+        save_to_file("Encrypt", message, encrypted_text, shift)
+
         print("\n✅ Encrypted Message:", encrypted_text)
 
     elif choice == "2":
@@ -33,6 +49,9 @@ while True:
             continue
 
         decrypted_text = decrypt(message, shift)
+
+        save_to_file("Decrypt", message, decrypted_text, shift)
+
         print("\n✅ Decrypted Message:", decrypted_text)
 
     elif choice == "3":
