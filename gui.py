@@ -1,7 +1,14 @@
 import tkinter as tk
 from tkinter import messagebox, filedialog
 
+from reportlab.platypus import SimpleDocTemplate, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
+
 from src.cipher import encrypt, decrypt
+
+# ---------------- History ----------------
+
+history = []
 
 
 class ToolTip:
@@ -77,7 +84,15 @@ def encrypt_text():
     output_text.delete("1.0", tk.END)
     output_text.insert(tk.END, result)
 
-    update_status("✔ Message encrypted successfully")
+    history.append(
+        f"========== ENCRYPT ==========\n"
+        f"Shift : {shift}\n\n"
+        f"Input:\n{message}\n\n"
+        f"Output:\n{result}\n"
+    )
+    print(history)
+
+    status.set("✔ Message encrypted successfully")
 
 
 def decrypt_text():
@@ -98,8 +113,15 @@ def decrypt_text():
     output_text.delete("1.0", tk.END)
     output_text.insert(tk.END, result)
 
-    update_status("✔ Message decrypted successfully")
+    history.append(
+        f"========== DECRYPT ==========\n"
+        f"Shift : {shift}\n\n"
+        f"Input:\n{message}\n\n"
+        f"Output:\n{result}\n"
+    )
+    print(history)
 
+    status.set("✔ Message decrypted successfully")
 
 def open_file():
     file_path = filedialog.askopenfilename(
@@ -212,6 +234,133 @@ def update_status(message):
         reset_status
     )
 
+def show_history():
+
+    if not history:
+        messagebox.showinfo(
+            "History",
+            "No history available."
+        )
+        return
+
+    history_window = tk.Toplevel(root)
+    history_window.title("Encryption History")
+    history_window.geometry("700x500")
+
+    text = tk.Text(
+        history_window,
+        wrap="word",
+        font=("Consolas", 10)
+    )
+
+    text.pack(
+        fill="both",
+        expand=True
+    )
+
+    text.insert(
+        tk.END,
+        "\n\n".join(history)
+    )
+
+    text.config(state="disabled")
+
+def clear_history():
+
+    if not history:
+        messagebox.showinfo(
+            "History",
+            "History is already empty."
+        )
+        return
+
+    answer = messagebox.askyesno(
+        "Clear History",
+        "Are you sure you want to clear all history?"
+    )
+
+    if answer:
+        history.clear()
+
+        messagebox.showinfo(
+            "History",
+            "History cleared successfully."
+        )
+
+        update_status("🗑 History cleared")
+
+
+def export_history_pdf():
+
+    if not history:
+        messagebox.showinfo(
+            "History",
+            "No history available to export."
+        )
+        return
+
+    file_path = filedialog.asksaveasfilename(
+        defaultextension=".pdf",
+        filetypes=[("PDF Files", "*.pdf")],
+        title="Save History as PDF"
+    )
+
+    if not file_path:
+        return
+
+    try:
+
+        doc = SimpleDocTemplate(file_path)
+        styles = getSampleStyleSheet()
+
+        story = []
+
+        story.append(
+            Paragraph(
+                "<b>Caesar Cipher Pro - History Report</b>",
+                styles["Title"]
+            )
+        )
+
+        story.append(
+            Paragraph("<br/>", styles["Normal"])
+        )
+
+        for item in history:
+
+            safe_text = (
+                item.replace("&", "&amp;")
+                    .replace("<", "&lt;")
+                    .replace(">", "&gt;")
+                    .replace("\n", "<br/>")
+            )
+
+            story.append(
+                Paragraph(
+                    safe_text,
+                    styles["BodyText"]
+                )
+            )
+
+            story.append(
+                Paragraph("<br/>", styles["Normal"])
+            )
+
+        doc.build(story)
+
+        messagebox.showinfo(
+            "Success",
+            "History exported successfully!"
+        )
+
+        update_status("📄 History exported as PDF")
+
+    except Exception as e:
+
+        messagebox.showerror(
+            "Error",
+            str(e))
+
 # ---------------- Main Window ----------------
 
 root = tk.Tk()
@@ -280,6 +429,31 @@ help_menu.add_command(
 menu_bar.add_cascade(
     label="Help",
     menu=help_menu)
+
+# ---------- History Menu ---------- 
+history_menu = tk.Menu(menu_bar, tearoff=0)
+
+history_menu.add_command(
+    label="View History",
+    command=show_history
+)
+
+history_menu.add_command(
+    label="Export History as PDF",
+    command=export_history_pdf
+)
+
+history_menu.add_separator()
+
+history_menu.add_command(
+    label="Clear History",
+    command=clear_history
+)
+
+menu_bar.add_cascade(
+    label="History",
+    menu=history_menu
+)
 
 root.config(menu=menu_bar)
 
