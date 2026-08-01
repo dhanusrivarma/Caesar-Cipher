@@ -43,6 +43,21 @@ class ToolTip:
             self.tooltip.destroy()
             self.tooltip = None
 
+def update_counter(event=None):
+
+    text = input_text.get("1.0", "end-1c")
+
+    characters = len(text)
+
+    words = len(text.split())
+
+    lines = len(text.splitlines())
+
+    counter.set(
+        f"Characters: {characters}    "
+        f"Words: {words}    "
+        f"Lines: {lines}"
+    )
 
 def encrypt_text():
     message = input_text.get("1.0", tk.END).strip()
@@ -62,7 +77,7 @@ def encrypt_text():
     output_text.delete("1.0", tk.END)
     output_text.insert(tk.END, result)
 
-    status.set("✔ Message encrypted successfully")
+    update_status("✔ Message encrypted successfully")
 
 
 def decrypt_text():
@@ -83,7 +98,7 @@ def decrypt_text():
     output_text.delete("1.0", tk.END)
     output_text.insert(tk.END, result)
 
-    status.set("✔ Message decrypted successfully")
+    update_status("✔ Message decrypted successfully")
 
 
 def open_file():
@@ -100,7 +115,7 @@ def open_file():
             input_text.delete("1.0", tk.END)
             input_text.insert(tk.END, content)
 
-            status.set("📂 File loaded successfully")
+            update_status("📂 File loaded successfully")
 
         except Exception as e:
             messagebox.showerror("Error", str(e))
@@ -129,7 +144,7 @@ def save_output():
                 "Output saved successfully!"
             )
 
-            status.set("💾 Output saved successfully")
+            update_status("💾 Output saved successfully")
 
         except Exception as e:
             messagebox.showerror("Error", str(e))
@@ -151,7 +166,7 @@ def copy_output():
         "Output copied to clipboard!"
     )
 
-    status.set("📋 Output copied to clipboard")
+    update_status("📋 Output copied to clipboard")
 
 
 def show_about():
@@ -169,14 +184,33 @@ def show_about():
         "• User-Friendly GUI"
     )
 
+def exit_program():
+    answer = messagebox.askyesno(
+        "Exit",
+        "Are you sure you want to exit?"
+    )
+
+    if answer:
+        root.destroy()
 
 def clear_fields():
     input_text.delete("1.0", tk.END)
     output_text.delete("1.0", tk.END)
     shift_entry.delete(0, tk.END)
 
-    status.set("🧹 Fields cleared")
+    update_status("🧹 Fields cleared")
 
+def reset_status():
+    status.set("Ready")
+
+
+def update_status(message):
+    status.set(message)
+
+    root.after(
+        3000,
+        reset_status
+    )
 
 # ---------------- Main Window ----------------
 
@@ -207,7 +241,7 @@ file_menu.add_separator()
 
 file_menu.add_command(
     label="Exit",
-    command=root.destroy
+    command=exit_program
 )
 
 menu_bar.add_cascade(
@@ -383,7 +417,7 @@ about_button.grid(row=3, column=0, padx=5, pady=5)
 exit_button = tk.Button(
     button_frame,
     text="❌ Exit",
-    command=root.destroy,
+    command=exit_program,
     **button_style
 )
 exit_button.grid(row=3, column=1, padx=5, pady=5)
@@ -406,8 +440,27 @@ output_text = tk.Text(
 )
 output_text.pack()
 
+# ---------------- Live Counter ----------------
+
+counter = tk.StringVar()
+
+counter.set(
+    "Characters: 0    Words: 0    Lines: 0"
+)
+
 # ---------------- Status Bar ----------------
 
+counter_label = tk.Label(
+    root,
+    textvariable=counter,
+    bg="#EAF4FC",
+    fg="#1565C0",
+    font=("Segoe UI", 9, "bold")
+)
+
+counter_label.pack(
+    pady=5
+)
 status_bar = tk.Label(
     root,
     textvariable=status,
@@ -423,13 +476,16 @@ status_bar.pack(side=tk.BOTTOM, fill=tk.X)
 
 
 # ---------------- Keyboard Shortcuts ----------------
-
+input_text.bind(
+    "<KeyRelease>",
+    update_counter
+)
 root.bind("<Control-e>", lambda event: encrypt_text())
 root.bind("<Control-d>", lambda event: decrypt_text())
 root.bind("<Control-o>", lambda event: open_file())
 root.bind("<Control-s>", lambda event: save_output())
 root.bind("<Control-l>", lambda event: clear_fields())
-root.bind("<Control-q>", lambda event: root.destroy())
+root.bind("<Control-q>", lambda event: exit_program())
 root.bind("<F1>", lambda event: show_about())
 
 ToolTip(
@@ -471,5 +527,7 @@ ToolTip(
     exit_button,
     "Close the application"
 )
+
+root.protocol("WM_DELETE_WINDOW", exit_program)
 
 root.mainloop()
