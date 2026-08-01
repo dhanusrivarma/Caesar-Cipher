@@ -22,6 +22,8 @@ def encrypt_text():
     output_text.delete("1.0", tk.END)
     output_text.insert(tk.END, result)
 
+    status.set("✔ Message encrypted successfully")
+
 
 def decrypt_text():
     message = input_text.get("1.0", tk.END).strip()
@@ -41,6 +43,8 @@ def decrypt_text():
     output_text.delete("1.0", tk.END)
     output_text.insert(tk.END, result)
 
+    status.set("✔ Message decrypted successfully")
+
 
 def open_file():
     file_path = filedialog.askopenfilename(
@@ -55,6 +59,8 @@ def open_file():
 
             input_text.delete("1.0", tk.END)
             input_text.insert(tk.END, content)
+
+            status.set("📂 File loaded successfully")
 
         except Exception as e:
             messagebox.showerror("Error", str(e))
@@ -83,6 +89,8 @@ def save_output():
                 "Output saved successfully!"
             )
 
+            status.set("💾 Output saved successfully")
+
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
@@ -102,6 +110,8 @@ def copy_output():
         "Copied",
         "Output copied to clipboard!"
     )
+
+    status.set("📋 Output copied to clipboard")
 
 
 def show_about():
@@ -125,6 +135,8 @@ def clear_fields():
     output_text.delete("1.0", tk.END)
     shift_entry.delete(0, tk.END)
 
+    status.set("🧹 Fields cleared")
+
 
 # ---------------- Main Window ----------------
 
@@ -132,6 +144,11 @@ root = tk.Tk()
 root.title("Caesar Cipher Pro")
 root.geometry("600x600")
 root.configure(bg="#EAF4FC")
+
+# ---------------- Status Variable ----------------
+
+status = tk.StringVar()
+status.set("Ready")
 
 # ---------------- Title ----------------
 
@@ -284,5 +301,32 @@ output_text = tk.Text(
     font=("Segoe UI", 10)
 )
 output_text.pack()
+
+# ---------------- Status Bar ----------------
+
+status_bar = tk.Label(
+    root,
+    textvariable=status,
+    bd=1,
+    relief=tk.SUNKEN,
+    anchor="w",
+    bg="#D6EAF8",
+    fg="#0D47A1",
+    font=("Segoe UI", 9)
+)
+
+status_bar.pack(side=tk.BOTTOM, fill=tk.X)
+
+
+# ---------------- Keyboard Shortcuts ----------------
+
+root.bind("<Control-e>", lambda event: encrypt_text())
+root.bind("<Control-d>", lambda event: decrypt_text())
+root.bind("<Control-o>", lambda event: open_file())
+root.bind("<Control-s>", lambda event: save_output())
+root.bind("<Control-l>", lambda event: clear_fields())
+root.bind("<Control-q>", lambda event: root.destroy())
+root.bind("<F1>", lambda event: show_about())
+
 
 root.mainloop()
