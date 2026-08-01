@@ -145,6 +145,70 @@ root.title("Caesar Cipher Pro")
 root.geometry("600x600")
 root.configure(bg="#EAF4FC")
 
+# ---------------- Menu Bar ----------------
+
+menu_bar = tk.Menu(root)
+
+# ---------- File Menu ----------
+
+file_menu = tk.Menu(menu_bar, tearoff=0)
+
+file_menu.add_command(
+    label="Open File",
+    command=open_file
+)
+
+file_menu.add_command(
+    label="Save Output",
+    command=save_output
+)
+
+file_menu.add_separator()
+
+file_menu.add_command(
+    label="Exit",
+    command=root.destroy
+)
+
+menu_bar.add_cascade(
+    label="File",
+    menu=file_menu
+)
+
+# ---------- Edit Menu ----------
+
+edit_menu = tk.Menu(menu_bar, tearoff=0)
+
+edit_menu.add_command(
+    label="Copy Output",
+    command=copy_output
+)
+
+edit_menu.add_command(
+    label="Clear",
+    command=clear_fields
+)
+
+menu_bar.add_cascade(
+    label="Edit",
+    menu=edit_menu
+)
+
+# ---------- Help Menu ----------
+
+help_menu = tk.Menu(menu_bar, tearoff=0)
+
+help_menu.add_command(
+    label="About",
+    command=show_about
+)
+
+menu_bar.add_cascade(
+    label="Help",
+    menu=help_menu)
+
+root.config(menu=menu_bar)
+
 # ---------------- Status Variable ----------------
 
 status = tk.StringVar()
