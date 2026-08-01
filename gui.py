@@ -4,6 +4,46 @@ from tkinter import messagebox, filedialog
 from src.cipher import encrypt, decrypt
 
 
+class ToolTip:
+
+    def __init__(self, widget, text):
+
+        self.widget = widget
+        self.text = text
+        self.tooltip = None
+
+        widget.bind("<Enter>", self.show_tooltip)
+        widget.bind("<Leave>", self.hide_tooltip)
+
+    def show_tooltip(self, event):
+
+        x = self.widget.winfo_rootx() + 20
+        y = self.widget.winfo_rooty() + 35
+
+        self.tooltip = tk.Toplevel(self.widget)
+
+        self.tooltip.wm_overrideredirect(True)
+        self.tooltip.geometry(f"+{x}+{y}")
+
+        label = tk.Label(
+            self.tooltip,
+            text=self.text,
+            background="#FFFFE0",
+            foreground="black",
+            relief="solid",
+            borderwidth=1,
+            font=("Segoe UI", 9)
+        )
+
+        label.pack()
+
+    def hide_tooltip(self, event):
+
+        if self.tooltip:
+            self.tooltip.destroy()
+            self.tooltip = None
+
+
 def encrypt_text():
     message = input_text.get("1.0", tk.END).strip()
 
@@ -392,5 +432,44 @@ root.bind("<Control-l>", lambda event: clear_fields())
 root.bind("<Control-q>", lambda event: root.destroy())
 root.bind("<F1>", lambda event: show_about())
 
+ToolTip(
+    encrypt_button,
+    "Encrypt the entered message"
+)
+
+ToolTip(
+    decrypt_button,
+    "Decrypt the entered message"
+)
+
+ToolTip(
+    open_button,
+    "Open a text file"
+)
+
+ToolTip(
+    save_button,
+    "Save output to a text file"
+)
+
+ToolTip(
+    copy_button,
+    "Copy output to clipboard"
+)
+
+ToolTip(
+    clear_button,
+    "Clear all fields"
+)
+
+ToolTip(
+    about_button,
+    "About this application"
+)
+
+ToolTip(
+    exit_button,
+    "Close the application"
+)
 
 root.mainloop()
