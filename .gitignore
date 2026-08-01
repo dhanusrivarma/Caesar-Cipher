@@ -9,3 +9,4 @@ __pycache__/
 history.txt
 
 encrypted_message.txt
+encrypted_output.txt

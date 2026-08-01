@@ -1,0 +1,288 @@
+import tkinter as tk
+from tkinter import messagebox, filedialog
+
+from src.cipher import encrypt, decrypt
+
+
+def encrypt_text():
+    message = input_text.get("1.0", tk.END).strip()
+
+    if not message:
+        messagebox.showerror("Error", "Please enter a message.")
+        return
+
+    try:
+        shift = int(shift_entry.get())
+    except ValueError:
+        messagebox.showerror("Error", "Shift must be a number.")
+        return
+
+    result = encrypt(message, shift)
+
+    output_text.delete("1.0", tk.END)
+    output_text.insert(tk.END, result)
+
+
+def decrypt_text():
+    message = input_text.get("1.0", tk.END).strip()
+
+    if not message:
+        messagebox.showerror("Error", "Please enter a message.")
+        return
+
+    try:
+        shift = int(shift_entry.get())
+    except ValueError:
+        messagebox.showerror("Error", "Shift must be a number.")
+        return
+
+    result = decrypt(message, shift)
+
+    output_text.delete("1.0", tk.END)
+    output_text.insert(tk.END, result)
+
+
+def open_file():
+    file_path = filedialog.askopenfilename(
+        title="Open Text File",
+        filetypes=[("Text Files", "*.txt")]
+    )
+
+    if file_path:
+        try:
+            with open(file_path, "r") as file:
+                content = file.read()
+
+            input_text.delete("1.0", tk.END)
+            input_text.insert(tk.END, content)
+
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+
+
+def save_output():
+    content = output_text.get("1.0", tk.END).strip()
+
+    if not content:
+        messagebox.showerror("Error", "No output to save.")
+        return
+
+    file_path = filedialog.asksaveasfilename(
+        defaultextension=".txt",
+        filetypes=[("Text Files", "*.txt")],
+        title="Save Output"
+    )
+
+    if file_path:
+        try:
+            with open(file_path, "w") as file:
+                file.write(content)
+
+            messagebox.showinfo(
+                "Success",
+                "Output saved successfully!"
+            )
+
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+
+
+def copy_output():
+    content = output_text.get("1.0", tk.END).strip()
+
+    if not content:
+        messagebox.showerror("Error", "No output to copy.")
+        return
+
+    root.clipboard_clear()
+    root.clipboard_append(content)
+    root.update()
+
+    messagebox.showinfo(
+        "Copied",
+        "Output copied to clipboard!"
+    )
+
+
+def show_about():
+    messagebox.showinfo(
+        "About Caesar Cipher Pro",
+        "Caesar Cipher Pro\n\n"
+        "Version: 1.0\n\n"
+        "Developed in Python using Tkinter.\n\n"
+        "Features:\n"
+        "• Encrypt Messages\n"
+        "• Decrypt Messages\n"
+        "• Open Text Files\n"
+        "• Save Output\n"
+        "• Copy Output\n"
+        "• User-Friendly GUI"
+    )
+
+
+def clear_fields():
+    input_text.delete("1.0", tk.END)
+    output_text.delete("1.0", tk.END)
+    shift_entry.delete(0, tk.END)
+
+
+# ---------------- Main Window ----------------
+
+root = tk.Tk()
+root.title("Caesar Cipher Pro")
+root.geometry("600x600")
+root.configure(bg="#EAF4FC")
+
+# ---------------- Title ----------------
+
+title = tk.Label(
+    root,
+    text="Caesar Cipher Pro",
+    font=("Segoe UI", 22, "bold"),
+    fg="#1565C0",
+    bg="#EAF4FC"
+)
+title.pack(pady=10)
+
+# ---------------- Input Label ----------------
+
+tk.Label(
+    root,
+    text="Enter Message",
+    font=("Segoe UI", 10, "bold"),
+    fg="#0D47A1",
+    bg="#EAF4FC"
+).pack()
+
+# ---------------- Input Box ----------------
+
+input_text = tk.Text(
+    root,
+    height=6,
+    width=60,
+    font=("Segoe UI", 10)
+)
+input_text.pack()
+
+# ---------------- Shift ----------------
+
+tk.Label(
+    root,
+    text="Shift Value",
+    font=("Segoe UI", 10, "bold"),
+    fg="#0D47A1",
+    bg="#EAF4FC"
+).pack(pady=5)
+
+shift_entry = tk.Entry(
+    root,
+    font=("Segoe UI", 10)
+)
+shift_entry.pack()
+
+# ---------------- Button Frame ----------------
+
+button_frame = tk.Frame(root, bg="#EAF4FC")
+button_frame.pack(pady=15)
+
+button_style = {
+    "width": 15,
+    "bg": "#1976D2",
+    "fg": "white",
+    "font": ("Segoe UI", 10, "bold"),
+    "activebackground": "#1565C0",
+    "activeforeground": "white",
+    "cursor": "hand2"
+}
+
+# Encrypt
+encrypt_button = tk.Button(
+    button_frame,
+    text="🔒 Encrypt",
+    command=encrypt_text,
+    **button_style
+)
+encrypt_button.grid(row=0, column=0, padx=5, pady=5)
+
+# Decrypt
+decrypt_button = tk.Button(
+    button_frame,
+    text="🔓 Decrypt",
+    command=decrypt_text,
+    **button_style
+)
+decrypt_button.grid(row=0, column=1, padx=5, pady=5)
+
+# Open File
+open_button = tk.Button(
+    button_frame,
+    text="📂 Open File",
+    command=open_file,
+    **button_style
+)
+open_button.grid(row=1, column=0, padx=5, pady=5)
+
+# Save Output
+save_button = tk.Button(
+    button_frame,
+    text="💾 Save Output",
+    command=save_output,
+    **button_style
+)
+save_button.grid(row=1, column=1, padx=5, pady=5)
+
+# Copy Output
+copy_button = tk.Button(
+    button_frame,
+    text="📋 Copy Output",
+    command=copy_output,
+    **button_style
+)
+copy_button.grid(row=2, column=0, padx=5, pady=5)
+
+# Clear
+clear_button = tk.Button(
+    button_frame,
+    text="🧹 Clear",
+    command=clear_fields,
+    **button_style
+)
+clear_button.grid(row=2, column=1, padx=5, pady=5)
+
+# About
+about_button = tk.Button(
+    button_frame,
+    text="ℹ️ About",
+    command=show_about,
+    **button_style
+)
+about_button.grid(row=3, column=0, padx=5, pady=5)
+
+# Exit
+exit_button = tk.Button(
+    button_frame,
+    text="❌ Exit",
+    command=root.destroy,
+    **button_style
+)
+exit_button.grid(row=3, column=1, padx=5, pady=5)
+
+# ---------------- Output ----------------
+
+tk.Label(
+    root,
+    text="Output",
+    font=("Segoe UI", 10, "bold"),
+    fg="#0D47A1",
+    bg="#EAF4FC"
+).pack()
+
+output_text = tk.Text(
+    root,
+    height=6,
+    width=60,
+    font=("Segoe UI", 10)
+)
+output_text.pack()
+
+root.mainloop()
