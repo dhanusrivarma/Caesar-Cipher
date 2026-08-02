@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox, filedialog
+import json
+from datetime import datetime
 
 from reportlab.platypus import SimpleDocTemplate, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
@@ -84,12 +86,14 @@ def encrypt_text():
     output_text.delete("1.0", tk.END)
     output_text.insert(tk.END, result)
 
-    history.append(
-        f"========== ENCRYPT ==========\n"
-        f"Shift : {shift}\n\n"
-        f"Input:\n{message}\n\n"
-        f"Output:\n{result}\n"
-    )
+    history.append({
+    "Operation": "Encrypt",
+    "Shift": shift,
+    "Input": message,
+    "Output": result,
+    "Time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+})
+
     print(history)
 
     status.set("✔ Message encrypted successfully")
@@ -113,12 +117,13 @@ def decrypt_text():
     output_text.delete("1.0", tk.END)
     output_text.insert(tk.END, result)
 
-    history.append(
-        f"========== DECRYPT ==========\n"
-        f"Shift : {shift}\n\n"
-        f"Input:\n{message}\n\n"
-        f"Output:\n{result}\n"
-    )
+    history.append({
+    "Operation": "Decrypt",
+    "Shift": shift,
+    "Input": message,
+    "Output": result,
+    "Time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+})
     print(history)
 
     status.set("✔ Message decrypted successfully")
@@ -258,10 +263,16 @@ def show_history():
         expand=True
     )
 
-    text.insert(
-        tk.END,
-        "\n\n".join(history)
-    )
+    for item in history:
+
+     text.insert(
+    tk.END,
+    f"========== {item['Operation'].upper()} ==========\n"
+    f"Time  : {item['Time']}\n"
+    f"Shift : {item['Shift']}\n"
+    f"Input : {item['Input']}\n"
+    f"Output: {item['Output']}\n\n"
+)
 
     text.config(state="disabled")
 
@@ -328,22 +339,19 @@ def export_history_pdf():
 
         for item in history:
 
-            safe_text = (
-                item.replace("&", "&amp;")
-                    .replace("<", "&lt;")
-                    .replace(">", "&gt;")
-                    .replace("\n", "<br/>")
-            )
+            text = (
+    f"<b>{item['Operation']}</b><br/>"
+    f"Time : {item['Time']}<br/>"
+    f"Shift : {item['Shift']}<br/>"
+    f"Input : {item['Input']}<br/>"
+    f"Output : {item['Output']}<br/><br/>"
+)
 
             story.append(
                 Paragraph(
-                    safe_text,
+                    text,
                     styles["BodyText"]
                 )
-            )
-
-            story.append(
-                Paragraph("<br/>", styles["Normal"])
             )
 
         doc.build(story)
@@ -360,6 +368,79 @@ def export_history_pdf():
         messagebox.showerror(
             "Error",
             str(e))
+
+def export_history_json():
+
+    if not history:
+        messagebox.showinfo(
+            "History",
+            "No history available to export."
+        )
+        return
+
+    file_path = filedialog.asksaveasfilename(
+        defaultextension=".json",
+        filetypes=[("JSON Files", "*.json")],
+        title="Save History as JSON"
+    )
+
+    if not file_path:
+        return
+
+    try:
+
+        with open(file_path, "w", encoding="utf-8") as file:
+
+            json.dump(
+                history,
+                file,
+                indent=4
+            )
+
+        messagebox.showinfo(
+            "Success",
+            "History exported successfully!"
+        )
+
+        update_status("📄 History exported as JSON")
+
+    except Exception as e:
+
+        messagebox.showerror(
+            "Error",
+            str(e)
+        )
+
+def import_history_json():
+
+    global history
+
+    file_path = filedialog.askopenfilename(
+        title="Import History",
+        filetypes=[("JSON Files", "*.json")]
+    )
+
+    if not file_path:
+        return
+
+    try:
+
+        with open(file_path, "r", encoding="utf-8") as file:
+            history = json.load(file)
+
+        messagebox.showinfo(
+            "Success",
+            "History imported successfully!"
+        )
+
+        update_status("📂 History imported")
+
+    except Exception as e:
+
+        messagebox.showerror(
+            "Error",
+            str(e)
+        )
 
 # ---------------- Main Window ----------------
 
@@ -441,6 +522,16 @@ history_menu.add_command(
 history_menu.add_command(
     label="Export History as PDF",
     command=export_history_pdf
+)
+
+history_menu.add_command(
+    label="Export History as JSON",
+    command=export_history_json
+)
+
+history_menu.add_command(
+    label="Import History from JSON",
+    command=import_history_json
 )
 
 history_menu.add_separator()
