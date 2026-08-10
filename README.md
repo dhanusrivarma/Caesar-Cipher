@@ -92,7 +92,7 @@ pip install -r requirements.txt
 ## ▶️ How to Run
 
 ```bash
-python main.py
+python login.py
 ```
 
 ---
