@@ -14,3 +14,6 @@ encrypted_output.txt
 
 # Password files
 password.txt
+
+# Unwanted files
+assets/Payment Status.pdf
