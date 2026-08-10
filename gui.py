@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox, filedialog
 import json
 import time
+import sys
 from datetime import datetime
 
 import matplotlib.pyplot as plt
@@ -1289,6 +1290,13 @@ def check_session_timeout():
 
     root.after(1000, check_session_timeout)
 
+# ---------------- Logged-in User ----------------
+
+if len(sys.argv) > 1:
+    logged_in_username = sys.argv[1]
+else:
+    logged_in_username = "User"
+
 # ---------------- Main Window ----------------
 
 root = tk.Tk()
@@ -1449,6 +1457,16 @@ title = tk.Label(
     bg="#EAF4FC"
 )
 title.pack(pady=10)
+
+welcome_label = tk.Label(
+    root,
+    text=f"Welcome, {logged_in_username}",
+    font=("Segoe UI", 10, "bold"),
+    fg="#1565C0",
+    bg="#EAF4FC"
+)
+
+welcome_label.pack(pady=(0, 5))
 
 # ---------------- Input Label ----------------
 

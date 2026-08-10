@@ -53,15 +53,15 @@ def save_users(users):
 # OPEN MAIN APPLICATION
 # ============================================================
 
-def open_cipher_app():
 
+def open_cipher_app(username):
     root.destroy()
 
     subprocess.Popen([
         sys.executable,
-        "gui.py"
+        "gui.py",
+        username
     ])
-
 
 # ============================================================
 # LOGIN
@@ -92,7 +92,7 @@ def login():
             f"Welcome, {username}! 🎉"
         )
 
-        open_cipher_app()
+        open_cipher_app(username)
 
     else:
 
@@ -377,7 +377,7 @@ def open_register():
 
 
         # Automatically open Caesar Cipher Pro
-        open_cipher_app()
+        open_cipher_app(username)
 
 
     # ========================================================
