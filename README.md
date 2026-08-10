@@ -91,8 +91,10 @@ pip install -r requirements.txt
 
 ## ▶️ How to Run
 
+start the application using:
+
 ```bash
-python login.py
+python main.py
 ```
 
 ---
