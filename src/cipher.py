@@ -142,3 +142,69 @@ def show_decrypt_steps(text, shift):
     print("=" * 50)
 
     return result
+
+
+# ---------------- Atbash Cipher ----------------
+
+def atbash(text):
+    """
+    Encrypts or decrypts text using the Atbash Cipher.
+
+    Atbash replaces:
+    A → Z
+    B → Y
+    C → X
+    ...
+    Z → A
+
+    The same function is used for both encryption and decryption.
+    """
+
+    result = ""
+
+    for char in text:
+
+        if char.isupper():
+            result += chr(ord('Z') - (ord(char) - ord('A')))
+
+        elif char.islower():
+            result += chr(ord('z') - (ord(char) - ord('a')))
+
+        else:
+            result += char
+
+    return result
+
+# ---------------- Rail Fence Cipher ----------------
+
+def rail_fence_encrypt(text, rails):
+    """
+    Encrypts text using the Rail Fence Cipher.
+    """
+
+    if rails <= 1 or rails >= len(text):
+        return text
+
+    fence = [[] for _ in range(rails)]
+
+    row = 0
+    direction = 1
+
+    for char in text:
+
+        fence[row].append(char)
+
+        if row == 0:
+            direction = 1
+
+        elif row == rails - 1:
+            direction = -1
+
+        row += direction
+
+    result = ""
+
+    for rail in fence:
+        result += "".join(rail)
+
+    return result

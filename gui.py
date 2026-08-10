@@ -1,12 +1,17 @@
 import tkinter as tk
 from tkinter import messagebox, filedialog
 import json
+import time
 from datetime import datetime
+
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from reportlab.platypus import SimpleDocTemplate, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
 
-from src.cipher import encrypt, decrypt
+from src.cipher import encrypt, decrypt, atbash, rail_fence_encrypt
+from src.vigenere import encrypt_vigenere, decrypt_vigenere
 
 # ---------------- History ----------------
 
@@ -68,65 +73,428 @@ def update_counter(event=None):
         f"Lines: {lines}"
     )
 
+def update_cipher(*args):
+
+    selected_cipher = cipher_var.get()
+
+    # Hide the key widgets first
+    key_label.pack_forget()
+    key_entry.pack_forget()
+
+    if selected_cipher == "Caesar":
+
+        key_label.config(text="Shift Value")
+
+        key_label.pack(
+            before=button_frame,
+            pady=5
+        )
+
+        key_entry.pack(
+            before=button_frame
+        )
+
+    elif selected_cipher == "Vigenère":
+
+        key_label.config(text="Keyword")
+
+        key_label.pack(
+            before=button_frame,
+            pady=5
+        )
+
+        key_entry.pack(
+            before=button_frame
+        )
+
+    elif selected_cipher == "ROT13":
+
+        # No key required
+        pass
+
+    elif selected_cipher == "Atbash":
+
+        # No key required
+        pass
+
+    elif selected_cipher == "Rail Fence":
+
+        key_label.config(text="Rails")
+
+        key_label.pack(
+            before=button_frame,
+            pady=5
+        )
+
+        key_entry.pack(
+            before=button_frame
+        )
+
+
+def rot13(text):
+    result = ""
+
+    for char in text:
+        if "A" <= char <= "Z":
+            result += chr((ord(char) - ord("A") + 13) % 26 + ord("A"))
+
+        elif "a" <= char <= "z":
+            result += chr((ord(char) - ord("a") + 13) % 26 + ord("a"))
+
+        else:
+            result += char
+
+    return result
+
+
+# ---------------- Rail Fence Encrypt ----------------
+
+def rail_fence_encrypt(text, rails):
+
+    if rails <= 1:
+        return text
+
+    fence = [[] for _ in range(rails)]
+
+    row = 0
+    direction = 1
+
+    for char in text:
+
+        fence[row].append(char)
+
+        if row == 0:
+            direction = 1
+
+        elif row == rails - 1:
+            direction = -1
+
+        row += direction
+
+    result = ""
+
+    for rail in fence:
+        result += "".join(rail)
+
+    return result
+
+
+# ---------------- Rail Fence Decrypt ----------------
+
+def rail_fence_decrypt(ciphertext, rails):
+
+    if rails <= 1:
+        return ciphertext
+
+    pattern = []
+
+    row = 0
+    direction = 1
+
+    for _ in range(len(ciphertext)):
+
+        pattern.append(row)
+
+        if row == 0:
+            direction = 1
+
+        elif row == rails - 1:
+            direction = -1
+
+        row += direction
+
+    rail_counts = [0] * rails
+
+    for r in pattern:
+        rail_counts[r] += 1
+
+    rails_data = []
+
+    index = 0
+
+    for count in rail_counts:
+
+        rails_data.append(
+            list(ciphertext[index:index + count])
+        )
+
+        index += count
+
+    result = []
+
+    rail_positions = [0] * rails
+
+    for r in pattern:
+
+        result.append(
+            rails_data[r][rail_positions[r]]
+        )
+
+        rail_positions[r] += 1
+
+    return "".join(result)
+
 def encrypt_text():
+
     message = input_text.get("1.0", tk.END).strip()
 
     if not message:
-        messagebox.showerror("Error", "Please enter a message.")
+        messagebox.showerror(
+            "Error",
+            "Please enter a message."
+        )
         return
 
-    try:
-        shift = int(shift_entry.get())
-    except ValueError:
-        messagebox.showerror("Error", "Shift must be a number.")
-        return
+    # ---------------- Caesar ----------------
+    if cipher_var.get() == "Caesar":
 
-    result = encrypt(message, shift)
+        try:
+            shift = int(key_entry.get())
+        except ValueError:
+            messagebox.showerror(
+                "Error",
+                "Shift must be a number."
+            )
+            return
 
+        result = encrypt(message, shift)
+        key_value = shift
+
+    # ---------------- Vigenère ----------------
+    elif cipher_var.get() == "Vigenère":
+
+        key = key_entry.get().strip()
+
+        if not key:
+            messagebox.showerror(
+                "Error",
+                "Please enter a Vigenère keyword."
+            )
+            return
+
+        if not key.isalpha():
+            messagebox.showerror(
+                "Error",
+                "Vigenère keyword must contain letters only."
+            )
+            return
+
+        result = encrypt_vigenere(
+            message,
+            key
+        )
+
+        key_value = key
+
+    # ---------------- ROT13 ----------------
+    elif cipher_var.get() == "ROT13":
+
+        result = rot13(message)
+
+        key_value = "None"
+
+    # ---------------- Atbash ----------------
+    elif cipher_var.get() == "Atbash":
+
+        result = atbash(message)
+
+        key_value = "None"
+
+    # ---------------- Rail Fence ----------------
+    elif cipher_var.get() == "Rail Fence":
+
+        try:
+            rails = int(key_entry.get())
+        except ValueError:
+            messagebox.showerror(
+                "Error",
+                "Rails must be a number."
+            )
+            return
+
+        if rails < 2:
+            messagebox.showerror(
+                "Error",
+                "Rails must be 2 or greater."
+            )
+            return
+
+        result = rail_fence_encrypt(
+            message,
+            rails
+        )
+
+        key_value = rails
+
+    # ---------------- Output ----------------
     output_text.delete("1.0", tk.END)
-    output_text.insert(tk.END, result)
+    output_text.insert("1.0", str(result))
 
+    # ---------------- History ----------------
     history.append({
-    "Operation": "Encrypt",
-    "Shift": shift,
-    "Input": message,
-    "Output": result,
-    "Time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-})
+        "Operation": "Encrypt",
+        "Cipher": cipher_var.get(),
+        "Key": key_value,
+        "Input": message,
+        "Output": result,
+        "Time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    })
+
+    save_history()
 
     print(history)
 
     status.set("✔ Message encrypted successfully")
 
-
 def decrypt_text():
+
     message = input_text.get("1.0", tk.END).strip()
 
     if not message:
-        messagebox.showerror("Error", "Please enter a message.")
+        messagebox.showerror(
+            "Error",
+            "Please enter a message."
+        )
         return
 
-    try:
-        shift = int(shift_entry.get())
-    except ValueError:
-        messagebox.showerror("Error", "Shift must be a number.")
-        return
+    # ---------------- Caesar ----------------
+    if cipher_var.get() == "Caesar":
 
-    result = decrypt(message, shift)
+        try:
+            shift = int(key_entry.get())
+        except ValueError:
+            messagebox.showerror(
+                "Error",
+                "Shift must be a number."
+            )
+            return
 
+        result = decrypt(message, shift)
+        key_value = shift
+
+    # ---------------- Vigenère ----------------
+    elif cipher_var.get() == "Vigenère":
+
+        key = key_entry.get().strip()
+
+        if not key:
+            messagebox.showerror(
+                "Error",
+                "Please enter a Vigenère keyword."
+            )
+            return
+
+        if not key.isalpha():
+            messagebox.showerror(
+                "Error",
+                "Vigenère keyword must contain letters only."
+            )
+            return
+
+        result = decrypt_vigenere(
+            message,
+            key
+        )
+
+        key_value = key
+
+    # ---------------- ROT13 ----------------
+    elif cipher_var.get() == "ROT13":
+
+        result = rot13(message)
+        key_value = "None"
+
+    # ---------------- Atbash ----------------
+    elif cipher_var.get() == "Atbash":
+
+        result = atbash(message)
+        key_value = "None"
+
+    # ---------------- Rail Fence ----------------
+    elif cipher_var.get() == "Rail Fence":
+
+        try:
+            rails = int(key_entry.get())
+        except ValueError:
+            messagebox.showerror(
+                "Error",
+                "Rails must be a number."
+            )
+            return
+
+        if rails < 2:
+            messagebox.showerror(
+                "Error",
+                "Rails must be 2 or greater."
+            )
+            return
+
+        result = rail_fence_decrypt(
+            message,
+            rails
+        )
+
+        key_value = rails
+
+    # ---------------- Output ----------------
     output_text.delete("1.0", tk.END)
-    output_text.insert(tk.END, result)
+    output_text.insert("1.0", str(result))
 
+    # ---------------- History ----------------
     history.append({
-    "Operation": "Decrypt",
-    "Shift": shift,
-    "Input": message,
-    "Output": result,
-    "Time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-})
+        "Operation": "Decrypt",
+        "Cipher": cipher_var.get(),
+        "Key": key_value,
+        "Input": message,
+        "Output": result,
+        "Time": datetime.now().strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+    })
+
+    save_history()
+
     print(history)
 
-    status.set("✔ Message decrypted successfully")
+    status.set(
+        "✔ Message decrypted successfully"
+    )
+
+def brute_force():
+
+    message = input_text.get("1.0", tk.END).strip()
+
+    if not message:
+        messagebox.showerror(
+            "Error",
+            "Please enter encrypted text."
+        )
+        return
+
+    window = tk.Toplevel(root)
+    window.title("Caesar Cipher Cracker")
+    window.geometry("700x550")
+
+    text = tk.Text(
+        window,
+        font=("Consolas", 11),
+        wrap="word"
+    )
+
+    text.pack(fill="both", expand=True)
+
+    for shift in range(26):
+
+        result = decrypt(message, shift)
+
+        text.insert(
+            tk.END,
+            f"Shift {shift}\n"
+            f"{result}\n\n"
+            f"{'-'*45}\n\n"
+        )
+
+    text.config(state="disabled")
 
 def open_file():
     file_path = filedialog.askopenfilename(
@@ -195,6 +563,91 @@ def copy_output():
 
     update_status("📋 Output copied to clipboard")
 
+def change_password():
+
+    change_window = tk.Toplevel(root)
+    change_window.title("Change Password")
+    change_window.geometry("350x250")
+    change_window.resizable(False, False)
+
+    tk.Label(
+        change_window,
+        text="Current Password"
+    ).pack(pady=5)
+
+    current_entry = tk.Entry(
+        change_window,
+        show="*",
+        width=30
+    )
+    current_entry.pack()
+
+    tk.Label(
+        change_window,
+        text="New Password"
+    ).pack(pady=5)
+
+    new_entry = tk.Entry(
+        change_window,
+        show="*",
+        width=30
+    )
+    new_entry.pack()
+
+    tk.Label(
+        change_window,
+        text="Confirm Password"
+    ).pack(pady=5)
+
+    confirm_entry = tk.Entry(
+        change_window,
+        show="*",
+        width=30
+    )
+    confirm_entry.pack()
+
+    def save_password():
+
+        with open("password.txt", "r") as file:
+            current_password = file.read().strip()
+
+        if current_entry.get() != current_password:
+            messagebox.showerror(
+                "Error",
+                "Current password is incorrect."
+            )
+            return
+
+        if new_entry.get() != confirm_entry.get():
+            messagebox.showerror(
+                "Error",
+                "Passwords do not match."
+            )
+            return
+
+        if new_entry.get().strip() == "":
+            messagebox.showerror(
+                "Error",
+                "New password cannot be empty."
+            )
+            return
+
+        with open("password.txt", "w") as file:
+            file.write(new_entry.get())
+
+        messagebox.showinfo(
+            "Success",
+            "Password changed successfully!"
+        )
+
+        change_window.destroy()
+
+    tk.Button(
+        change_window,
+        text="Change Password",
+        command=save_password,
+        width=18
+    ).pack(pady=15)
 
 def show_about():
     messagebox.showinfo(
@@ -223,7 +676,7 @@ def exit_program():
 def clear_fields():
     input_text.delete("1.0", tk.END)
     output_text.delete("1.0", tk.END)
-    shift_entry.delete(0, tk.END)
+    key_entry.delete(0, tk.END)
 
     update_status("🧹 Fields cleared")
 
@@ -269,12 +722,134 @@ def show_history():
     tk.END,
     f"========== {item['Operation'].upper()} ==========\n"
     f"Time  : {item['Time']}\n"
-    f"Shift : {item['Shift']}\n"
+    f"Cipher : {item.get('Cipher', 'Caesar')}\n"
+    f"Key    : {item.get('Key', item.get('Shift', 'None'))}\n"
     f"Input : {item['Input']}\n"
     f"Output: {item['Output']}\n\n"
 )
 
     text.config(state="disabled")
+
+def search_history():
+
+    if not history:
+        messagebox.showinfo(
+            "History",
+            "No history available."
+        )
+        return
+
+    search_window = tk.Toplevel(root)
+    search_window.title("Search History")
+    search_window.geometry("700x500")
+
+    tk.Label(
+        search_window,
+        text="🔍 Search:",
+        font=("Segoe UI", 11, "bold")
+    ).pack(pady=5)
+
+    search_entry = tk.Entry(
+        search_window,
+        width=45,
+        font=("Segoe UI", 11)
+    )
+    search_entry.pack(pady=5)
+
+    result_box = tk.Text(
+        search_window,
+        wrap="word",
+        font=("Consolas", 10)
+    )
+    result_box.pack(fill="both", expand=True)
+
+    def update_results(event=None):
+
+        keyword = search_entry.get().lower()
+
+        result_box.config(state="normal")
+        result_box.delete("1.0", tk.END)
+
+        found = False
+
+        for item in history:
+
+            text = (
+                f"{item['Operation']} "
+                f"{item['Input']} "
+                f"{item['Output']}"
+            ).lower()
+
+            if keyword in text:
+
+                found = True
+
+                result_box.insert(
+                    tk.END,
+                    f"========== {item['Operation'].upper()} ==========\n"
+                    f"Time   : {item['Time']}\n"
+                    f"Cipher : {item.get('Cipher', 'Caesar')}\n"
+                    f"Key    : {item.get('Key', item.get('Shift', 'None'))}\n"
+                    f"Input  : {item['Input']}\n"
+                    f"Output : {item['Output']}\n\n"
+                )
+
+        if not found:
+            result_box.insert(
+                tk.END,
+                "No matching history found."
+            )
+
+        result_box.config(state="disabled")
+
+    search_entry.bind("<KeyRelease>", update_results)
+
+    update_results()
+
+    
+    def perform_search():
+
+        print("Search button clicked")
+
+        keyword = search_entry.get().lower()
+
+        print("Searching:", keyword)
+        print("History:", history)
+
+
+        result_box.delete("1.0", tk.END)
+
+        found = False
+
+        for item in history:
+
+            text = (
+                f"{item['Operation']} "
+                f"{item['Input']} "
+                f"{item['Output']}"
+            ).lower()
+
+            if keyword in text:
+
+                found = True
+
+                result_box.insert(
+                    tk.END,
+                    f"========== {item['Operation'].upper()} ==========\n"
+                    f"Time   : {item['Time']}\n"
+                    f"Cipher : {item.get('Cipher', 'Caesar')}\n"
+                    f"Key    : {item.get('Key', item.get('Shift', 'None'))}\n"
+                    f"Input : {item['Input']}\n"
+                    f"Output: {item['Output']}\n\n"
+                )
+
+        if not found:
+
+            result_box.insert(
+                tk.END,
+                "No matching history found."
+            )
+
 
 def clear_history():
 
@@ -292,6 +867,8 @@ def clear_history():
 
     if answer:
         history.clear()
+
+        save_history()
 
         messagebox.showinfo(
             "History",
@@ -442,9 +1019,283 @@ def import_history_json():
             str(e)
         )
 
+def save_history():
+
+    try:
+
+        with open("history.json", "w", encoding="utf-8") as file:
+
+            json.dump(
+                history,
+                file,
+                indent=4
+            )
+
+    except:
+        pass
+
+def load_history():
+
+    global history
+
+    try:
+
+        with open("history.json", "r", encoding="utf-8") as file:
+
+            history = json.load(file)
+
+    except:
+
+        history = []
+
+def show_statistics():
+
+    if not history:
+        messagebox.showinfo(
+            "Statistics",
+            "No history available."
+        )
+        return
+
+    total = len(history)
+
+    encrypt_count = 0
+    decrypt_count = 0
+
+    total_characters = 0
+    shifts = []
+
+    for item in history:
+
+        if item["Operation"] == "Encrypt":
+            encrypt_count += 1
+        else:
+            decrypt_count += 1
+
+        total_characters += len(item["Input"])
+
+        shifts.append(item["Shift"])
+
+    average_shift = sum(shifts) / len(shifts)
+
+    most_used_shift = max(
+        set(shifts),
+        key=shifts.count
+    )
+
+    messagebox.showinfo(
+        "Statistics",
+
+        f"Total Operations : {total}\n\n"
+
+        f"Encryptions : {encrypt_count}\n"
+
+        f"Decryptions : {decrypt_count}\n\n"
+
+        f"Characters Processed : {total_characters}\n\n"
+
+        f"Average Shift : {average_shift:.2f}\n"
+
+        f"Most Used Shift : {most_used_shift}"
+    )  
+
+def show_chart():
+
+    if not history:
+        messagebox.showinfo(
+            "Chart",
+            "No history available."
+        )
+        return
+
+    encrypt_count = 0
+    decrypt_count = 0
+
+    for item in history:
+
+        if item["Operation"] == "Encrypt":
+            encrypt_count += 1
+        else:
+            decrypt_count += 1
+
+    chart_window = tk.Toplevel(root)
+    chart_window.title("Encryption Statistics")
+    chart_window.geometry("650x500")
+
+    figure = plt.Figure(figsize=(6, 4), dpi=100)
+
+    ax = figure.add_subplot(111)
+
+    operations = ["Encrypt", "Decrypt"]
+    values = [encrypt_count, decrypt_count]
+
+    bars = ax.bar(
+    operations,
+    values,
+    color=["#4CAF50", "#FF9800"]
+)
+
+    for bar in bars:
+
+        height = bar.get_height()
+
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            height,
+            str(int(height)),
+            ha="center",
+            va="bottom",
+            fontsize=11,
+            fontweight="bold"
+        )
+
+    ax.set_title(
+        "Caesar Cipher Usage Statistics",
+        fontsize=14,
+        fontweight="bold"
+    )
+
+    ax.set_xlabel(
+        "Operation",
+        fontsize=11
+    )
+
+    ax.set_ylabel(
+        "Count",
+        fontsize=11
+    )
+
+    ax.grid(
+        axis="y",
+        linestyle="--",
+        alpha=0.5
+    )
+
+    canvas = FigureCanvasTkAgg(
+        figure,
+        master=chart_window
+    )
+
+    canvas.draw()
+
+    canvas.get_tk_widget().pack(
+        fill=tk.BOTH,
+        expand=True
+    )
+
+def show_pie_chart():
+
+    if not history:
+        messagebox.showinfo(
+            "Chart",
+            "No history available."
+        )
+        return
+
+    encrypt_count = 0
+    decrypt_count = 0
+
+    for item in history:
+
+        if item["Operation"] == "Encrypt":
+            encrypt_count += 1
+        else:
+            decrypt_count += 1
+
+    chart_window = tk.Toplevel(root)
+    chart_window.title("Pie Chart")
+    chart_window.geometry("600x500")
+
+    figure = plt.Figure(figsize=(6,5), dpi=100)
+
+    ax = figure.add_subplot(111)
+
+    ax.pie(
+        [encrypt_count, decrypt_count],
+        labels=["Encrypt", "Decrypt"],
+        autopct="%1.1f%%",
+        colors=["#4CAF50", "#FF9800"],
+        startangle=90
+    )
+
+    ax.set_title(
+        "Caesar Cipher Usage",
+        fontsize=14,
+        fontweight="bold"
+    )
+
+    canvas = FigureCanvasTkAgg(
+        figure,
+        master=chart_window
+    )
+
+    canvas.draw()
+
+    canvas.get_tk_widget().pack(
+        fill=tk.BOTH,
+        expand=True
+    )
+
+def crack_cipher():
+
+    message = input_text.get("1.0", tk.END).strip()
+
+    if not message:
+        messagebox.showerror(
+            "Error",
+            "Please enter a cipher text."
+        )
+        return
+
+    crack_window = tk.Toplevel(root)
+    crack_window.title("Caesar Cipher Cracker")
+    crack_window.geometry("700x550")
+
+    result_box = tk.Text(
+        crack_window,
+        wrap="word",
+        font=("Consolas", 10)
+    )
+
+    result_box.pack(fill="both", expand=True)
+
+    for shift in range(26):
+
+        possible = decrypt(message, shift)
+
+        result_box.insert(
+            tk.END,
+            f"Shift {shift:2d} : {possible}\n"
+        )
+
+    result_box.config(state="disabled")
+
+def update_activity(event=None):
+    global last_activity
+    last_activity = time.time()
+
+
+def check_session_timeout():
+
+    if time.time() - last_activity > SESSION_TIMEOUT:
+
+        messagebox.showinfo(
+            "Session Expired",
+            "Session expired due to inactivity."
+        )
+
+        root.destroy()
+        return
+
+    root.after(1000, check_session_timeout)
+
 # ---------------- Main Window ----------------
 
 root = tk.Tk()
+
+last_activity = time.time()
+SESSION_TIMEOUT = 300   # 5 minutes
+
 root.title("Caesar Cipher Pro")
 root.geometry("600x600")
 root.configure(bg="#EAF4FC")
@@ -493,6 +1344,13 @@ edit_menu.add_command(
     command=clear_fields
 )
 
+edit_menu.add_separator()
+
+edit_menu.add_command(
+    label="Change Password",
+    command=change_password
+)
+
 menu_bar.add_cascade(
     label="Edit",
     menu=edit_menu
@@ -520,6 +1378,11 @@ history_menu.add_command(
 )
 
 history_menu.add_command(
+    label="Search History",
+    command=search_history
+)
+
+history_menu.add_command(
     label="Export History as PDF",
     command=export_history_pdf
 )
@@ -544,6 +1407,29 @@ history_menu.add_command(
 menu_bar.add_cascade(
     label="History",
     menu=history_menu
+)
+
+statistics_menu = tk.Menu(menu_bar, tearoff=0)
+
+statistics_menu.add_command(
+    label="View Statistics",
+    command=show_statistics
+)
+
+statistics_menu.add_command(
+    label="Bar Chart",
+    command=show_chart
+)
+
+statistics_menu.add_command(
+    label="Pie Chart",
+    command=show_pie_chart
+)
+
+
+menu_bar.add_cascade(
+    label="Statistics",
+    menu=statistics_menu
 )
 
 root.config(menu=menu_bar)
@@ -584,21 +1470,56 @@ input_text = tk.Text(
 )
 input_text.pack()
 
-# ---------------- Shift ----------------
+# ---------------- Cipher ----------------
+
+cipher_frame = tk.Frame(root, bg="#EAF4FC")
+cipher_frame.pack(pady=5)
 
 tk.Label(
+    cipher_frame,
+    text="Cipher",
+    font=("Segoe UI", 10, "bold"),
+    fg="#0D47A1",
+    bg="#EAF4FC"
+).pack(side="left", padx=5)
+
+cipher_var = tk.StringVar(value="Caesar")
+cipher_var.trace_add("write", update_cipher)
+
+cipher_menu = tk.OptionMenu(
+    cipher_frame,
+    cipher_var,
+    "Caesar",
+    "Vigenère",
+    "ROT13",
+    "Atbash",
+    "Rail Fence"
+)
+
+cipher_menu.config(
+    font=("Segoe UI", 10),
+    width=12
+)
+
+cipher_menu.pack(side="left")
+
+
+# ---------------- Shift ----------------
+
+key_label = tk.Label(
     root,
     text="Shift Value",
     font=("Segoe UI", 10, "bold"),
     fg="#0D47A1",
     bg="#EAF4FC"
-).pack(pady=5)
+)
+key_label.pack(pady=5)
 
-shift_entry = tk.Entry(
+key_entry = tk.Entry(
     root,
     font=("Segoe UI", 10)
 )
-shift_entry.pack()
+key_entry.pack()
 
 # ---------------- Button Frame ----------------
 
@@ -669,14 +1590,16 @@ clear_button = tk.Button(
 )
 clear_button.grid(row=2, column=1, padx=5, pady=5)
 
-# About
-about_button = tk.Button(
+
+crack_button = tk.Button(
     button_frame,
-    text="ℹ️ About",
-    command=show_about,
+    text="🔍 Crack Cipher",
+    command=brute_force,
     **button_style
 )
-about_button.grid(row=3, column=0, padx=5, pady=5)
+
+crack_button.grid(row=3,column=0,padx=5,pady=5)
+
 
 # Exit
 exit_button = tk.Button(
@@ -686,6 +1609,7 @@ exit_button = tk.Button(
     **button_style
 )
 exit_button.grid(row=3, column=1, padx=5, pady=5)
+
 
 # ---------------- Output ----------------
 
@@ -764,6 +1688,11 @@ ToolTip(
 )
 
 ToolTip(
+    crack_button,
+    "Try every possible Caesar shift"
+)
+
+ToolTip(
     open_button,
     "Open a text file"
 )
@@ -784,15 +1713,21 @@ ToolTip(
 )
 
 ToolTip(
-    about_button,
-    "About this application"
-)
-
-ToolTip(
     exit_button,
     "Close the application"
 )
 
 root.protocol("WM_DELETE_WINDOW", exit_program)
+
+# Reset timer on keyboard and mouse activity
+root.bind_all("<Key>", update_activity)
+root.bind_all("<Button>", update_activity)
+root.bind_all("<Motion>", update_activity)
+
+# Start session timeout checker
+check_session_timeout()
+
+
+load_history()
 
 root.mainloop()

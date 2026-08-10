@@ -7,6 +7,10 @@ __pycache__/
 
 # History file
 history.txt
+history.json
 
 encrypted_message.txt
 encrypted_output.txt
+
+# Password files
+password.txt
